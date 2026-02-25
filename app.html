@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Calculator</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <div class="calculator">
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="btn" data-value="7">7</button>
+            <button class="btn" data-value="8">8</button>
+            <button class="btn" data-value="9">9</button>
+            <button class="btn" data-value="/">&divide;</button>
+            <button class="btn" data-value="4">4</button>
+            <button class="btn" data-value="5">5</button>
+            <button class="btn" data-value="6">6</button>
+            <button class="btn" data-value="*">&times;</button>
+            <button class="btn" data-value="1">1</button>
+            <button class="btn" data-value="2">2</button>
+            <button class="btn" data-value="3">3</button>
+            <button class="btn" data-value="-">&minus;</button>
+            <button class="btn" data-value="0">0</button>
+            <button class="btn" data-value=".">.</button>
+            <button class="btn" data-value="C">C</button>
+            <button class="btn" data-value="+">+</button>
+            <button class="btn equal" data-value="=">=</button>
+            <!-- Scientific buttons -->
+            <button class="btn" data-value="sin">sin</button>
+            <button class="btn" data-value="cos">cos</button>
+            <button class="btn" data-value="tan">tan</button>
+            <button class="btn" data-value="log">log</button>
+            <button class="btn" data-value="sqrt">√</button>
+            <button class="btn" data-value="^">^</button>
+            <button class="btn" data-value="(">(</button>
+            <button class="btn" data-value=")">)</button>
+        </div>
+    </div>
+    <script>
+        const display = document.getElementById('display');
+        const buttons = document.querySelectorAll('.btn');
+        let currentInput = '';
+        let resultShown = false;
+
+        function updateDisplay(value) {
+            display.textContent = value;
+        }
+
+        function parseScientific(input) {
+            // Insert * between number and function (e.g., 3sin(125) -> 3*sin(125))
+            input = input.replace(/(\d+)(?=(sin|cos|tan|log|sqrt)\()/g, '$1*');
+            // Replace scientific functions with JS Math equivalents
+            input = input.replace(/sin\(([^)]+)\)/g, (_, arg) => `Math.sin((${arg})*Math.PI/180)`);
+            input = input.replace(/cos\(([^)]+)\)/g, (_, arg) => `Math.cos((${arg})*Math.PI/180)`);
+            input = input.replace(/tan\(([^)]+)\)/g, (_, arg) => `Math.tan((${arg})*Math.PI/180)`);
+            input = input.replace(/log\(([^)]+)\)/g, (_, arg) => `Math.log10(${arg})`);
+            input = input.replace(/sqrt\(([^)]+)\)/g, (_, arg) => `Math.sqrt(${arg})`);
+            input = input.replace(/(\d+)\^(\d+)/g, (_, base, exp) => `Math.pow(${base},${exp})`);
+            return input;
+        }
+
+        buttons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.getAttribute('data-value');
+                if (val === 'C') {
+                    currentInput = '';
+                    updateDisplay('0');
+                    resultShown = false;
+                } else if (val === '=') {
+                    try {
+                        let evalInput = parseScientific(currentInput);
+                        let evalResult = eval(evalInput);
+                        updateDisplay(evalResult);
+                        currentInput = evalResult.toString();
+                        resultShown = true;
+                    } catch {
+                        updateDisplay('Error');
+                        currentInput = '';
+                        resultShown = false;
+                    }
+                } else if (["sin","cos","tan","log","sqrt"].includes(val)) {
+                    currentInput += val + '(';
+                    updateDisplay(currentInput);
+                } else if (val === '^') {
+                    currentInput += '^';
+                    updateDisplay(currentInput);
+                } else {
+                    if (resultShown && /[0-9.]/.test(val)) {
+                        currentInput = val;
+                        resultShown = false;
+                    } else {
+                        currentInput += val;
+                    }
+                    updateDisplay(currentInput || '0');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
